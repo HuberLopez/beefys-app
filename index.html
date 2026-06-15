@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Beefy's · Pide ya</title>
+<link rel="stylesheet" href="./styles.css" />
+<style>
+  html, body { margin: 0; background: #2c2c2c; }
+  * { -webkit-tap-highlight-color: transparent; }
+  @keyframes beefySheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes beefyFade { from { opacity: 0; } to { opacity: 1; } }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  input, textarea, button { font-family: var(--font-mono); }
+  input:focus, textarea:focus { outline: none; }
+
+  /* Responsive shell: full-screen on phones, framed on desktop */
+  .beefy-stage { min-height: 100dvh; display: flex; align-items: center; justify-content: center; background: #2c2c2c; }
+  .beefy-shell {
+    width: 100%; max-width: 460px; height: 100dvh; background: var(--white);
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+  }
+  @media (min-width: 540px) {
+    .beefy-stage { padding: 26px; }
+    .beefy-shell { height: min(900px, calc(100dvh - 52px)); border-radius: 40px;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.45), 0 0 0 10px #111, 0 0 0 12px #2c2c2c; }
+  }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="./_ds_bundle.js"></script>
+  <script src="./store.js"></script>
+  <script type="text/babel" data-presets="react">
+const { Logo, IconButton, Badge, Button, Doodle, QtyStepper, Input } = window.BeefysDesignSystem_881125;
+const S = window.BeefyStore;
+const fmt = (n) => "$" + (+n || 0).toFixed(2);
+const icons = () => {};
+const ICONS = {
+  "shopping-bag": '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  "plus": '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  "arrow-right": '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  "x": '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  "check": '<path d="M20 6 9 17l-5-5"/>',
+  "store": '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/>',
+  "banknote": '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+  "smartphone": '<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
+  "send": '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+  "paperclip": '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+  "map-pin": '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>'
+};
+function Icon({ name, size = 22, strokeWidth = 2.2, style }) {
+  return React.createElement("svg", {
+    width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+    strokeWidth: strokeWidth, strokeLinecap: "round", strokeLinejoin: "round",
+    style: { flex: "0 0 auto", ...style },
+    dangerouslySetInnerHTML: { __html: ICONS[name] || "" }
+  });
+}
+
+const TAG_TONE = { "Top venta": "lettuce", "Picante": "cheese", "Veggie": "outline", "Combo": "pink", "Nuevo": "pink" };
+const tagTone = (t) => TAG_TONE[t] || "lettuce";
+
+/* ---------- Item thumbnail ---------- */
+function Thumb({ item, size = 88 }) {
+  const src = S.photoSrc(item, "./");
+  if (src) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: "var(--radius-md)", background: "var(--standard-grey)", flex: "0 0 auto", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src={src} alt={item.n} style={{ width: "118%", height: "118%", objectFit: "contain", transform: "translateY(3%)" }} />
+      </div>
+    );
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: "var(--radius-md)", background: item.c || "var(--beefy-cheese)", color: item.t || "var(--ink-900)", flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Doodle name={item.doodle || "star"} size={size * 0.46} />
+    </div>
+  );
+}
+
+/* ---------- Segmented (Delivery/Pickup) ---------- */
+function Segmented({ options, value, onChange }) {
+  return (
+    <div style={{ display: "inline-flex", background: "var(--standard-grey)", borderRadius: "var(--radius-pill)", padding: 4, gap: 2 }}>
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <button key={o.value} type="button" onClick={() => onChange(o.value)}
+            style={{ border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, padding: "9px 18px", borderRadius: "var(--radius-pill)", background: on ? "var(--ink-900)" : "transparent", color: on ? "var(--white)" : "var(--ink-500)" }}>
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* =====================================================================
+   HOME / MENU
+   ===================================================================== */
+function Home({ db, mode, setMode, cart, cartCount, cartTotal, onOpenItem, onOpenCart, onQuickAdd, cat, setCat }) {
+  const scrollRef = React.useRef(null);
+  React.useEffect(icons);
+  const eta = mode === "delivery" ? db.business.etaDelivery : db.business.etaPickup;
+  const visible = db.items.filter((i) => i.cat === cat && i.avail !== false);
+  const qtyOf = (id) => cart.filter((l) => l.id === id).reduce((s, l) => s + l.qty, 0);
+
+  return (
+    <React.Fragment>
+      <div style={{ padding: "max(10px, env(safe-area-inset-top)) 20px 12px", flex: "0 0 auto" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <Logo color="ketchup" height={26} assetBase="./assets" />
+          <div style={{ position: "relative" }}>
+            <IconButton aria-label="Carrito" variant="dark" onClick={onOpenCart}><Icon name="shopping-bag" /></IconButton>
+            {cartCount > 0 && <span style={{ position: "absolute", top: -4, right: -4, minWidth: 20, height: 20, padding: "0 5px", borderRadius: 999, background: "var(--beefy-lettuce)", color: "var(--ink-900)", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--white)" }}>{cartCount}</span>}
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <Segmented options={[{ value: "delivery", label: "Delivery" }, { value: "pickup", label: "Pickup" }]} value={mode} onChange={setMode} />
+          <span style={{ fontSize: 13, color: "var(--ink-500)", fontWeight: 700 }}>{eta}</span>
+        </div>
+      </div>
+
+      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 20px" }}>
+        <div style={{ background: "var(--beefy-ketchup)", borderRadius: "var(--radius-lg)", padding: "20px 20px 0", position: "relative", overflow: "hidden", marginBottom: 18, minHeight: 148, display: "flex", alignItems: "flex-end" }}>
+          <div style={{ flex: 1, paddingBottom: 22 }}>
+            <Badge tone="lettuce" size="sm">{db.business.zone}</Badge>
+            <h2 style={{ color: "var(--white)", fontWeight: 900, fontSize: 29, lineHeight: 0.98, margin: "10px 0 0", textTransform: "uppercase" }}>Más carne,<br />menos drama</h2>
+          </div>
+          <img src="./assets/burger-classic.png" alt="" style={{ width: 142, height: 142, objectFit: "contain", marginBottom: -6, marginRight: -8, flex: "0 0 auto" }} />
+          <div style={{ position: "absolute", top: 14, right: 124, color: "var(--beefy-lettuce)" }}><Doodle name="star" size={32} /></div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, position: "sticky", top: 0, background: "var(--white)", paddingBottom: 12, paddingTop: 2, zIndex: 2, overflowX: "auto" }}>
+          {db.categories.map((c) => {
+            const on = c === cat;
+            return (
+              <button key={c} type="button" onClick={() => { setCat(c); scrollRef.current && (scrollRef.current.scrollTop = 168); }}
+                style={{ flex: "0 0 auto", border: "2px solid " + (on ? "var(--ink-900)" : "var(--line-200)"), background: on ? "var(--ink-900)" : "var(--white)", color: on ? "var(--white)" : "var(--ink-700)", fontWeight: 700, fontSize: 14, padding: "9px 17px", borderRadius: "var(--radius-pill)", cursor: "pointer" }}>{c}</button>
+            );
+          })}
+        </div>
+
+        <div style={{ paddingBottom: cartCount > 0 ? 110 : 24 }}>
+          {visible.length === 0 && <div style={{ padding: "40px 0", textAlign: "center", color: "var(--ink-300)", fontWeight: 700 }}>Nada por aquí todavía.</div>}
+          {visible.map((it) => {
+            const q = qtyOf(it.id);
+            return (
+              <div key={it.id} onClick={() => onOpenItem(it)} style={{ display: "flex", gap: 14, padding: "16px 0", borderBottom: "1px solid var(--line-200)", cursor: "pointer", alignItems: "flex-start" }}>
+                <Thumb item={it} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 700, fontSize: 17, color: "var(--ink-900)" }}>{it.n}</span>
+                    {it.tag ? <Badge tone={tagTone(it.tag)} size="sm">{it.tag}</Badge> : null}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: "var(--ink-500)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{it.d}</p>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+                    <span style={{ fontWeight: 700, fontSize: 16, color: "var(--ink-900)" }}>{fmt(it.p)}</span>
+                    <div onClick={(e) => { e.stopPropagation(); it.ex ? onOpenItem(it) : onQuickAdd(it); }}>
+                      <IconButton aria-label={"Agregar " + it.n} variant={q ? "solid" : "lettuce"} size={38}>
+                        {q ? <span style={{ fontWeight: 700, fontSize: 15 }}>{q}</span> : <Icon name="plus" />}
+                      </IconButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {cartCount > 0 && (
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "14px 20px calc(20px + env(safe-area-inset-bottom))", background: "linear-gradient(to top, var(--white) 72%, transparent)" }}>
+          <button type="button" onClick={onOpenCart} style={{ width: "100%", border: "none", cursor: "pointer", background: "var(--ink-900)", color: "var(--white)", borderRadius: "var(--radius-pill)", height: 58, padding: "0 10px 0 22px", display: "flex", alignItems: "center", justifyContent: "space-between", fontWeight: 700 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 16 }}>
+              <span style={{ background: "var(--beefy-lettuce)", color: "var(--ink-900)", borderRadius: 999, minWidth: 26, height: 26, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>{cartCount}</span>
+              Ver carrito
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 16 }}>{fmt(cartTotal)}<span style={{ background: "var(--beefy-ketchup)", borderRadius: 999, width: 38, height: 38, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Icon name="arrow-right" style={{ width: 20, height: 20 }} /></span></span>
+          </button>
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
+
+/* =====================================================================
+   ITEM SHEET
+   ===================================================================== */
+function ItemSheet({ db, item, onClose, onConfirm }) {
+  const [qty, setQty] = React.useState(1);
+  const [extras, setExtras] = React.useState({});
+  React.useEffect(icons);
+  const src = S.photoSrc(item, "./");
+  const list = db.extras || [];
+  const extrasTotal = list.reduce((s, a) => s + (extras[a.id] ? a.p : 0), 0);
+  const total = (item.p + extrasTotal) * qty;
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 10, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(44,44,44,0.45)", animation: "beefyFade var(--dur-base)" }}></div>
+      <div style={{ position: "relative", background: "var(--white)", borderTopLeftRadius: 30, borderTopRightRadius: 30, maxHeight: "92%", display: "flex", flexDirection: "column", animation: "beefySheetUp var(--dur-slow) var(--ease-out)" }}>
+        <div style={{ background: src ? "var(--beefy-cheese)" : (item.c || "var(--teenage-pink)"), borderTopLeftRadius: 30, borderTopRightRadius: 30, height: 188, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: 14, right: 14 }}><IconButton aria-label="Cerrar" variant="outline" onClick={onClose} style={{ background: "var(--white)" }}><Icon name="x" /></IconButton></div>
+          {src ? <img src={src} alt={item.n} style={{ width: 220, height: 220, objectFit: "contain" }} /> : <span style={{ color: item.t || "var(--ink-900)" }}><Doodle name={item.doodle || "star"} size={110} /></span>}
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "20px 24px 8px" }}>
+          {item.tag ? <div style={{ marginBottom: 8 }}><Badge tone={tagTone(item.tag)} size="sm">{item.tag}</Badge></div> : null}
+          <h2 style={{ fontWeight: 900, fontSize: 27, color: "var(--ink-900)", margin: "0 0 8px", textTransform: "uppercase", lineHeight: 1 }}>{item.n}</h2>
+          <p style={{ margin: "0 0 20px", fontSize: 15, lineHeight: 1.5, color: "var(--ink-500)" }}>{item.d}</p>
+          {list.length > 0 && (
+            <React.Fragment>
+              <div style={{ fontWeight: 700, fontSize: 13, textTransform: "uppercase", color: "var(--ink-300)", marginBottom: 6 }}>Hazla tuya</div>
+              <div>
+                {list.map((a) => {
+                  const on = !!extras[a.id];
+                  return (
+                    <label key={a.id} onClick={() => setExtras((e) => ({ ...e, [a.id]: !e[a.id] }))} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 0", borderBottom: "1px solid var(--line-200)", cursor: "pointer" }}>
+                      <span style={{ width: 26, height: 26, borderRadius: 8, border: "2px solid " + (on ? "var(--beefy-ketchup)" : "var(--line-200)"), background: on ? "var(--beefy-ketchup)" : "var(--white)", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>{on && <Icon name="check" style={{ width: 16, height: 16, color: "var(--white)" }} />}</span>
+                      <span style={{ flex: 1, fontSize: 15, color: "var(--ink-900)" }}>{a.n}</span>
+                      <span style={{ fontSize: 14, color: "var(--ink-500)", fontWeight: 700 }}>+{fmt(a.p)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </React.Fragment>
+          )}
+        </div>
+        <div style={{ flex: "0 0 auto", padding: "14px 24px calc(20px + env(safe-area-inset-bottom))", borderTop: "1px solid var(--line-200)", display: "flex", alignItems: "center", gap: 14 }}>
+          <QtyStepper value={qty} min={1} max={20} onChange={setQty} size="lg" />
+          <div style={{ flex: 1 }}>
+            <Button variant="solid" size="lg" full onClick={() => { const chosen = list.filter((a) => extras[a.id]); onConfirm(item, qty, chosen); }}>Agregar · {fmt(total)}</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =====================================================================
+   CART
+   ===================================================================== */
+function Cart({ db, cart, mode, onBack, onQty, onCheckout }) {
+  React.useEffect(icons);
+  const sub = cart.reduce((s, l) => s + l.price * l.qty, 0);
+  const delivery = mode === "delivery" ? (+db.business.deliveryFee || 0) : 0;
+  const total = sub + delivery;
+  const empty = cart.length === 0;
+
+  return (
+    <React.Fragment>
+      <div style={{ flex: "0 0 auto", padding: "max(10px, env(safe-area-inset-top)) 20px 14px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid var(--line-200)" }}>
+        <IconButton aria-label="Volver" variant="soft" onClick={onBack}><Icon name="arrow-left" /></IconButton>
+        <h1 style={{ fontWeight: 900, fontSize: 22, textTransform: "uppercase", color: "var(--ink-900)" }}>Tu carrito</h1>
+      </div>
+      {empty ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, color: "var(--ink-300)" }}>
+          <span style={{ color: "var(--line-200)" }}><Doodle name="b" size={84} /></span>
+          <span style={{ fontWeight: 700 }}>Tu carrito está vacío</span>
+          <Button variant="outline" onClick={onBack}>Ver el menú</Button>
+        </div>
+      ) : (
+        <React.Fragment>
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 20px 0" }}>
+            {cart.map((l) => (
+              <div key={l.lid} style={{ display: "flex", gap: 12, padding: "16px 0", borderBottom: "1px solid var(--line-200)", alignItems: "center" }}>
+                <Thumb item={db.items.find((i) => i.id === l.id) || { c: "var(--teenage-pink)" }} size={56} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--ink-900)" }}>{l.name}</div>
+                  {l.extras && l.extras.length > 0 && <div style={{ fontSize: 12, color: "var(--ink-300)", marginTop: 1 }}>{l.extras.map((e) => e.n).join(" · ")}</div>}
+                  <div style={{ fontSize: 14, color: "var(--ink-500)", marginTop: 2 }}>{fmt(l.price)}</div>
+                </div>
+                <QtyStepper value={l.qty} min={0} max={20} onChange={(q) => onQty(l.lid, q)} size="sm" />
+              </div>
+            ))}
+            <div style={{ paddingBottom: 150, paddingTop: 16 }}>
+              {[["Subtotal", sub], [mode === "delivery" ? "Envío" : "Retiro en tienda", delivery]].map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 14, color: "var(--ink-500)" }}><span>{k}</span><span>{v === 0 ? "Gratis" : fmt(v)}</span></div>
+              ))}
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 0", fontSize: 18, fontWeight: 900, color: "var(--ink-900)" }}><span>Total</span><span>{fmt(total)}</span></div>
+            </div>
+          </div>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "14px 20px calc(20px + env(safe-area-inset-bottom))", background: "var(--white)", borderTop: "1px solid var(--line-200)" }}>
+            <Button variant="solid" size="lg" full onClick={onCheckout}>
+              <span style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}><span>Continuar</span><span>{fmt(total)}</span></span>
+            </Button>
+          </div>
+        </React.Fragment>
+      )}
+    </React.Fragment>
+  );
+}
+
+/* =====================================================================
+   CHECKOUT (streamlined — one screen)
+   ===================================================================== */
+function Field({ label, children, hint }) {
+  return (
+    <label style={{ display: "block", marginBottom: 14 }}>
+      <div style={{ fontWeight: 700, fontSize: 12.5, textTransform: "uppercase", color: "var(--ink-500)", marginBottom: 6, letterSpacing: ".02em" }}>{label}</div>
+      {children}
+      {hint && <div style={{ fontSize: 12, color: "var(--ink-300)", marginTop: 5 }}>{hint}</div>}
+    </label>
+  );
+}
+const inputStyle = { width: "100%", boxSizing: "border-box", border: "2px solid var(--line-200)", borderRadius: "var(--radius-md)", padding: "13px 14px", fontSize: 15, color: "var(--ink-900)", background: "var(--white)" };
+
+function Checkout({ db, cart, mode, rate, onBack, onSend }) {
+  const [f, setF] = React.useState({ name: "", phone: "", address: "", ref: "" });
+  const [pay, setPay] = React.useState("efectivo");
+  const [touched, setTouched] = React.useState(false);
+  React.useEffect(icons);
+  const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
+
+  const sub = cart.reduce((s, l) => s + l.price * l.qty, 0);
+  const delivery = mode === "delivery" ? (+db.business.deliveryFee || 0) : 0;
+  const total = sub + delivery;
+  const pm = db.payment.pagomovil;
+
+  const needAddr = mode === "delivery";
+  const valid = f.name.trim() && f.phone.trim() && (!needAddr || f.address.trim());
+
+  const go = () => { setTouched(true); if (valid) onSend({ customer: f, pay, totals: { sub, delivery, total } }); };
+  const errBox = (bad) => ({ ...inputStyle, borderColor: bad ? "var(--beefy-ketchup)" : "var(--line-200)" });
+
+  return (
+    <React.Fragment>
+      <div style={{ flex: "0 0 auto", padding: "max(10px, env(safe-area-inset-top)) 20px 14px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid var(--line-200)" }}>
+        <IconButton aria-label="Volver" variant="soft" onClick={onBack}><Icon name="arrow-left" /></IconButton>
+        <h1 style={{ fontWeight: 900, fontSize: 22, textTransform: "uppercase", color: "var(--ink-900)" }}>Tus datos</h1>
+      </div>
+
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "18px 20px 150px" }}>
+        <Field label="Nombre y apellido">
+          <input value={f.name} onChange={set("name")} placeholder="¿Cómo te llamas?" style={errBox(touched && !f.name.trim())} />
+        </Field>
+        <Field label="Teléfono" hint="Por si necesitamos coordinar el pedido">
+          <input value={f.phone} onChange={set("phone")} inputMode="tel" placeholder="0414 000 0000" style={errBox(touched && !f.phone.trim())} />
+        </Field>
+
+        {needAddr ? (
+          <React.Fragment>
+            <Field label="Dirección de envío">
+              <input value={f.address} onChange={set("address")} placeholder="Calle, casa/edificio, sector" style={errBox(touched && !f.address.trim())} />
+            </Field>
+            <Field label="Referencia (opcional)" hint="Un punto de referencia para llegar más rápido">
+              <input value={f.ref} onChange={set("ref")} placeholder="Ej. al lado de la panadería" style={inputStyle} />
+            </Field>
+          </React.Fragment>
+        ) : (
+          <div style={{ display: "flex", gap: 12, padding: "14px", background: "var(--standard-grey)", borderRadius: "var(--radius-md)", marginBottom: 16 }}>
+            <Icon name="store" style={{ color: "var(--beefy-ketchup)", flex: "0 0 auto", marginTop: 2 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink-900)", marginBottom: 3 }}>Retiras en tienda</div>
+              <div style={{ fontSize: 13, color: "var(--ink-500)", lineHeight: 1.45 }}>{db.business.pickupAddress}</div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ fontWeight: 700, fontSize: 12.5, textTransform: "uppercase", color: "var(--ink-500)", margin: "6px 0 8px" }}>¿Cómo vas a pagar?</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+          {[{ id: "efectivo", label: "Efectivo", icon: "banknote" }, { id: "pagomovil", label: "Pago Móvil", icon: "smartphone" }].map((p) => {
+            const on = pay === p.id;
+            return (
+              <button key={p.id} type="button" onClick={() => setPay(p.id)} style={{ border: "2px solid " + (on ? "var(--ink-900)" : "var(--line-200)"), background: on ? "var(--ink-900)" : "var(--white)", color: on ? "var(--white)" : "var(--ink-700)", borderRadius: "var(--radius-md)", padding: "16px 12px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, fontWeight: 700, fontSize: 15 }}>
+                <Icon name={p.icon} />{p.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {pay === "pagomovil" && (
+          <div style={{ background: "var(--ketchup-tint)", border: "2px solid var(--beefy-ketchup)", borderRadius: "var(--radius-md)", padding: "14px 16px", marginBottom: 8 }}>
+            <div style={{ fontWeight: 900, fontSize: 13, textTransform: "uppercase", color: "var(--beefy-ketchup)", marginBottom: 10 }}>Datos para Pago Móvil</div>
+            {[["Banco", pm.banco], ["Cédula / RIF", pm.cedula], ["Teléfono", pm.telefono]].map(([k, v]) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px dashed rgba(237,61,0,.25)" }}>
+                <span style={{ fontSize: 13, color: "var(--ink-500)" }}>{k}</span>
+                <span style={{ fontWeight: 700, fontSize: 15, color: "var(--ink-900)" }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ fontSize: 12.5, color: "var(--ink-700)", marginTop: 10, lineHeight: 1.5 }}>Haz el pago por <b>Bs. {(total * rate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> y <b>adjunta la captura</b> en el chat de WhatsApp. 📎</div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "14px 20px calc(20px + env(safe-area-inset-bottom))", background: "var(--white)", borderTop: "1px solid var(--line-200)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 14 }}>
+          <span style={{ color: "var(--ink-500)" }}>Total a pagar</span>
+          <span style={{ fontWeight: 900, color: "var(--ink-900)" }}>{fmt(total)} <span style={{ color: "var(--ink-300)", fontWeight: 700, fontSize: 13 }}>· Bs. {(total * rate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></span>
+        </div>
+        <Button variant="solid" size="lg" full onClick={go} style={!valid && touched ? { opacity: .7 } : {}}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><Icon name="send" style={{ width: 19, height: 19 }} />Enviar pedido por WhatsApp</span>
+        </Button>
+        {!valid && touched && <div style={{ textAlign: "center", color: "var(--beefy-ketchup)", fontSize: 12.5, fontWeight: 700, marginTop: 8 }}>Completa los datos marcados para continuar</div>}
+      </div>
+    </React.Fragment>
+  );
+}
+
+/* =====================================================================
+   SEND / CONFIRM (replaces tracking)
+   ===================================================================== */
+function buildMessage({ db, cart, mode, customer, pay, totals, rate }) {
+  const L = [];
+  L.push("🍔 *NUEVO PEDIDO · Beefy's*");
+  L.push("");
+  L.push("👤 *Cliente:* " + customer.name);
+  L.push("📞 *Teléfono:* " + customer.phone);
+  L.push("🛵 *Tipo:* " + (mode === "delivery" ? "Delivery" : "Pickup (retiro en tienda)"));
+  if (mode === "delivery") {
+    L.push("📍 *Dirección:* " + customer.address);
+    if (customer.ref) L.push("🔖 *Referencia:* " + customer.ref);
+  }
+  L.push("");
+  L.push("*— Pedido —*");
+  cart.forEach((l) => {
+    L.push("• " + l.qty + "x " + l.name + " — " + fmt(l.price * l.qty));
+    if (l.extras && l.extras.length) l.extras.forEach((e) => L.push("    + " + e.n));
+  });
+  L.push("");
+  L.push("*Subtotal:* " + fmt(totals.sub));
+  if (mode === "delivery" && totals.delivery > 0) L.push("*Envío:* " + fmt(totals.delivery));
+  const bs = (totals.total * rate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  L.push("*TOTAL:* " + fmt(totals.total) + "  (Bs. " + bs + ")");
+  L.push("");
+  if (pay === "pagomovil") {
+    L.push("💳 *Pago:* Pago Móvil");
+    L.push("_Adjunto la captura del comprobante_ 📎");
+  } else {
+    L.push("💵 *Pago:* Efectivo");
+  }
+  L.push("");
+  L.push("¡Gracias por preferirnos! 🫶");
+  return L.join("\n");
+}
+
+function SendScreen({ db, order, onWhatsApp, onDone }) {
+  React.useEffect(icons);
+  return (
+    <React.Fragment>
+      <div style={{ background: "var(--beefy-ketchup)", padding: "max(26px, calc(env(safe-area-inset-top) + 18px)) 26px 30px", flex: "0 0 auto", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -12, right: -8, color: "rgba(227,230,0,0.9)" }}><Doodle name="star" size={120} /></div>
+        <div style={{ width: 56, height: 56, borderRadius: 999, background: "var(--white)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}><Icon name="check" style={{ color: "var(--beefy-ketchup)", width: 30, height: 30, strokeWidth: 3 }} /></div>
+        <h1 style={{ color: "var(--white)", fontWeight: 900, fontSize: 31, textTransform: "uppercase", lineHeight: 0.98, margin: 0 }}>¡Ya casi!<br />Envía tu pedido</h1>
+        <p style={{ color: "var(--white)", opacity: .92, margin: "12px 0 0", fontSize: 14.5, lineHeight: 1.5, maxWidth: 320 }}>Toca el botón y se abrirá WhatsApp con tu pedido ya escrito. Solo dale <b>enviar</b> y nosotros lo confirmamos.</p>
+      </div>
+
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "20px 24px 0" }}>
+        <div style={{ background: "var(--standard-grey)", borderRadius: "var(--radius-lg)", padding: "16px 18px" }}>
+          <div style={{ fontWeight: 700, fontSize: 12.5, textTransform: "uppercase", color: "var(--ink-500)", marginBottom: 10 }}>Resumen</div>
+          {order.cart.map((l) => (
+            <div key={l.lid} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 14, color: "var(--ink-900)" }}><span>{l.qty}x {l.name}</span><span style={{ fontWeight: 700 }}>{fmt(l.price * l.qty)}</span></div>
+          ))}
+          <div style={{ borderTop: "1px solid var(--line-200)", marginTop: 8, paddingTop: 10, display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 16, color: "var(--ink-900)" }}><span>Total</span><span>{fmt(order.totals.total)}</span></div>
+        </div>
+        {order.pay === "pagomovil" && (
+          <div style={{ display: "flex", gap: 10, marginTop: 14, padding: "13px 15px", background: "var(--lettuce-tint, #FAFBD0)", border: "2px solid var(--beefy-lettuce)", borderRadius: "var(--radius-md)" }}>
+            <Icon name="paperclip" style={{ flex: "0 0 auto", marginTop: 1 }} />
+            <div style={{ fontSize: 13, color: "var(--ink-700)", lineHeight: 1.5 }}>No olvides <b>adjuntar la captura</b> de tu Pago Móvil en el chat.</div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ flex: "0 0 auto", padding: "14px 20px calc(20px + env(safe-area-inset-bottom))", borderTop: "1px solid var(--line-200)" }}>
+        <Button variant="solid" size="lg" full onClick={onWhatsApp}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><Icon name="send" style={{ width: 20, height: 20 }} />Abrir WhatsApp y enviar</span>
+        </Button>
+        <button type="button" onClick={onDone} style={{ width: "100%", background: "transparent", border: "none", color: "var(--ink-500)", fontWeight: 700, fontSize: 14, padding: "14px 0 2px", cursor: "pointer" }}>Volver al menú</button>
+      </div>
+    </React.Fragment>
+  );
+}
+
+/* =====================================================================
+   APP
+   ===================================================================== */
+function App() {
+  const [db] = React.useState(() => S.load());
+  const [rate, setRate] = React.useState(() => +db.business.rate);
+  const [screen, setScreen] = React.useState("home");
+  const [sheetItem, setSheetItem] = React.useState(null);
+  const [cart, setCart] = React.useState([]);
+  const [mode, setMode] = React.useState("delivery");
+  const [cat, setCat] = React.useState(db.categories[0]);
+  const [order, setOrder] = React.useState(null);
+
+  React.useEffect(() => { S.resolveRate(db).then((r) => setRate(r)); }, []);
+
+  const cartCount = cart.reduce((s, l) => s + l.qty, 0);
+  const cartTotal = cart.reduce((s, l) => s + l.price * l.qty, 0);
+
+  const addLine = (item, qty, extras) => {
+    const ex = extras || [];
+    const unit = item.p + ex.reduce((s, e) => s + e.p, 0);
+    const key = item.id + "|" + ex.map((e) => e.id).sort().join(",");
+    setCart((prev) => {
+      const i = prev.findIndex((l) => l.key === key);
+      if (i >= 0) { const n = prev.slice(); n[i] = { ...n[i], qty: n[i].qty + qty }; return n; }
+      return [...prev, { lid: S.uid(), key, id: item.id, name: item.n, price: unit, qty, extras: ex.map((e) => ({ n: e.n, p: e.p })) }];
+    });
+  };
+  const setQty = (lid, q) => setCart((prev) => prev.flatMap((l) => l.lid === lid ? (q <= 0 ? [] : [{ ...l, qty: q }]) : [l]));
+
+  const doSend = ({ customer, pay, totals }) => {
+    const o = { cart, mode, customer, pay, totals };
+    setOrder(o);
+    setScreen("send");
+  };
+  const openWhatsApp = () => {
+    const msg = buildMessage({ db, cart: order.cart, mode: order.mode, customer: order.customer, pay: order.pay, totals: order.totals, rate });
+    const url = "https://wa.me/" + db.business.whatsapp + "?text=" + encodeURIComponent(msg);
+    window.open(url, "_blank");
+  };
+  const reset = () => { setCart([]); setOrder(null); setScreen("home"); };
+
+  return (
+    <div className="beefy-stage">
+      <div className="beefy-shell">
+        {screen === "home" && <Home db={db} mode={mode} setMode={setMode} cat={cat} setCat={setCat} cart={cart} cartCount={cartCount} cartTotal={cartTotal} onOpenItem={setSheetItem} onQuickAdd={(it) => addLine(it, 1, [])} onOpenCart={() => setScreen("cart")} />}
+        {screen === "cart" && <Cart db={db} cart={cart} mode={mode} onBack={() => setScreen("home")} onQty={setQty} onCheckout={() => setScreen("checkout")} />}
+        {screen === "checkout" && <Checkout db={db} cart={cart} mode={mode} rate={rate} onBack={() => setScreen("cart")} onSend={doSend} />}
+        {screen === "send" && order && <SendScreen db={db} order={order} onWhatsApp={openWhatsApp} onDone={reset} />}
+        {sheetItem && <ItemSheet db={db} item={sheetItem} onClose={() => setSheetItem(null)} onConfirm={(it, qty, ex) => { addLine(it, qty, ex); setSheetItem(null); }} />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+icons();
+  </script>
+</body>
+</html>

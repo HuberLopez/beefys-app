@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beefy's — From Prototype to Live (Beginner Roadmap)</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --ketchup:#ED3D00; --lettuce:#E3E600; --cheese:#FFA63B; --pink:#EBB7ED;
+    --ink:#2C2C2C; --ink-700:#3D3D3D; --ink-500:#6B6B6B; --line:#E4E4E4;
+    --paper:#FBFBF7;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;font-family:var(--font-mono,"Slussen Mono",ui-monospace,monospace);
+    color:var(--ink);background:var(--paper);line-height:1.5;letter-spacing:normal;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:880px;margin:0 auto;padding:0 22px 120px}
+
+  /* ── Hero ── */
+  .hero{background:var(--ketchup);color:#fff;border-radius:0 0 30px 30px;
+    padding:48px 40px 44px;margin-bottom:40px;position:relative;overflow:hidden}
+  .hero .full{max-width:880px;margin:0 auto}
+  .hero .kicker{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;
+    text-transform:uppercase;background:rgba(0,0,0,.16);padding:6px 12px;border-radius:999px;margin-bottom:20px}
+  .hero img.logo{height:34px;width:auto;display:block;margin-bottom:22px}
+  .hero h1{font-weight:900;text-transform:uppercase;font-size:50px;line-height:.94;margin:0 0 14px}
+  .hero p{font-size:15px;color:#FFE7DE;max-width:560px;margin:0}
+  .hero .star{position:absolute;right:-30px;top:-26px;font-size:240px;line-height:1;color:var(--lettuce);
+    opacity:.16;font-weight:900;transform:rotate(-12deg);pointer-events:none}
+
+  /* ── Reality check ── */
+  .reality{background:#fff;border:3px solid var(--ink);border-radius:24px;
+    box-shadow:6px 8px 0 var(--ink);padding:26px 28px;margin-bottom:14px}
+  .reality h2{font-size:14px;text-transform:uppercase;font-weight:900;margin:0 0 12px;
+    display:flex;align-items:center;gap:9px}
+  .reality h2 .dot{width:11px;height:11px;border-radius:50%;background:var(--lettuce);border:2px solid var(--ink);flex:none}
+  .reality p{margin:0 0 12px;font-size:13.5px;color:var(--ink-700)}
+  .reality p:last-child{margin-bottom:0}
+  .haves{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 4px}
+  .have{border:2px solid var(--line);border-radius:14px;padding:13px 14px;background:#fff}
+  .have b{display:block;font-size:12.5px;text-transform:uppercase;font-weight:900;margin-bottom:4px}
+  .have span{font-size:11.5px;color:var(--ink-500);line-height:1.4;display:block}
+  .have.c0 b{color:var(--ketchup)} .have.c1 b{color:#C99A00} .have.c2 b{color:#B05CB6}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:34px 0 26px;align-items:center}
+  .legend .pill{font-size:11px;font-weight:700;text-transform:uppercase;padding:6px 12px;border-radius:999px;border:2px solid var(--ink)}
+  .legend .now{background:var(--lettuce)} .legend .soon{background:#fff} .legend .later{background:var(--ink);color:#fff}
+  .legend em{font-style:normal;font-size:12px;color:var(--ink-500)}
+
+  /* ── Timeline ── */
+  .phase{position:relative;padding-left:64px;margin-bottom:30px}
+  .phase::before{content:"";position:absolute;left:23px;top:50px;bottom:-30px;width:3px;background:var(--ink);opacity:.16}
+  .phase:last-of-type::before{display:none}
+  .num{position:absolute;left:0;top:0;width:48px;height:48px;border-radius:50%;
+    background:var(--ink);color:#fff;font-weight:900;font-size:20px;display:flex;align-items:center;justify-content:center;
+    border:3px solid var(--ink);z-index:2}
+  .phase.now .num{background:var(--lettuce);color:var(--ink)}
+  .phase.soon .num{background:var(--ketchup);color:#fff}
+  .card{background:#fff;border:3px solid var(--ink);border-radius:22px;box-shadow:5px 6px 0 var(--ink);overflow:hidden}
+  .card-head{padding:20px 24px 16px;border-bottom:2px solid var(--line)}
+  .tagrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:11px}
+  .tag{font-size:10.5px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:2px solid var(--ink)}
+  .tag.t-now{background:var(--lettuce)} .tag.t-soon{background:var(--cheese)} .tag.t-later{background:var(--pink)}
+  .tag.t-cost{background:#fff}
+  .card-head h3{font-size:23px;font-weight:900;text-transform:uppercase;margin:0 0 6px;line-height:1.02}
+  .card-head .goal{font-size:13px;color:var(--ink-500);margin:0}
+  .card-body{padding:8px 24px 22px}
+  ol.steps{list-style:none;counter-reset:s;margin:0;padding:0}
+  ol.steps>li{counter-increment:s;position:relative;padding:14px 0 14px 40px;border-bottom:1px dashed var(--line)}
+  ol.steps>li:last-child{border-bottom:none}
+  ol.steps>li::before{content:counter(s);position:absolute;left:0;top:13px;width:26px;height:26px;border-radius:8px;
+    background:var(--ink);color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center}
+  ol.steps>li b{font-size:14px;font-weight:900}
+  ol.steps>li p{margin:5px 0 0;font-size:13px;color:var(--ink-700)}
+  ol.steps>li p .k{background:var(--lettuce);padding:1px 6px;border-radius:5px;font-weight:700;white-space:nowrap}
+  ol.steps>li a{color:var(--ketchup);font-weight:700;text-decoration:none;border-bottom:2px solid var(--lettuce)}
+  .callout{display:flex;gap:11px;align-items:flex-start;background:#FFF7E8;border:2px solid var(--cheese);
+    border-radius:14px;padding:12px 14px;margin-top:16px;font-size:12.5px;color:var(--ink-700)}
+  .callout.win{background:#EEFBE9;border-color:#7CC34F}
+  .callout b{font-weight:900}
+  .callout .ig{font-size:18px;line-height:1;flex:none}
+
+  /* ── Cost table ── */
+  .summary{background:var(--ink);color:#fff;border-radius:24px;padding:30px 30px 26px;margin:46px 0 36px}
+  .summary h2{font-size:15px;text-transform:uppercase;font-weight:900;margin:0 0 18px;color:var(--lettuce)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.16)}
+  th{font-size:10.5px;text-transform:uppercase;color:#FFC9B7;font-weight:700}
+  td b{font-weight:900}
+  td.cost{color:var(--lettuce);font-weight:900;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+
+  /* ── Next box ── */
+  .next{background:var(--lettuce);border:3px solid var(--ink);border-radius:24px;
+    box-shadow:6px 8px 0 var(--ink);padding:28px 30px}
+  .next h2{font-size:24px;font-weight:900;text-transform:uppercase;margin:0 0 8px}
+  .next>p{font-size:13.5px;color:var(--ink-700);margin:0 0 18px;max-width:580px}
+  .next ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .next li{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:13px 15px;font-size:13px;font-weight:700;
+    display:flex;gap:9px;align-items:center}
+  .next li .ar{font-weight:900;color:var(--ketchup)}
+
+  .foot{text-align:center;font-size:11px;color:var(--ink-500);margin-top:40px}
+
+  @media (max-width:640px){
+    .hero{padding:36px 24px 36px}.hero h1{font-size:36px}
+    .haves,.next ul{grid-template-columns:1fr}
+    .page{padding:0 16px 80px}
+    .phase{padding-left:54px}.phase::before{left:21px}
+  }
+  @media print{
+    body{background:#fff}
+    .hero{border-radius:0}
+    .card,.reality,.next{box-shadow:none}
+    .phase{break-inside:avoid}
+    .hero .star{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="full">
+    <img class="logo" src="assets/logo-beefy-white.png" alt="Beefy's">
+    <span class="kicker">Beginner roadmap · every single step</span>
+    <h1>From prototype<br>to live</h1>
+    <p>You have a working prototype of the Beefy's ordering app. This is the honest, no-skipped-steps path to turning it into a real thing people can order from — written for someone who has never shipped a website before.</p>
+  </div>
+  <div class="star">★</div>
+</header>
+
+<main class="page">
+
+  <!-- REALITY CHECK -->
+  <section class="reality">
+    <h2><span class="dot"></span>First: what you actually have right now</h2>
+    <p>What's in this folder is a <b>prototype</b> — it looks and clicks exactly like the real app, but everything happens inside the visitor's browser. Nothing is saved to a server yet, no real money moves, and orders don't reach a kitchen on their own. That's normal. You go live in <b>stages</b>, and you do <b>not</b> need all of them on day one.</p>
+    <div class="haves">
+      <div class="have c0"><b>Cliente</b><span>The customer's ordering flow: menu → cart → delivery → payment proof → send.</span></div>
+      <div class="have c1"><b>Operador</b><span>The kitchen view: incoming orders, payment check, live shift tally.</span></div>
+      <div class="have c2"><b>Backend</b><span>The owner's panel: edit the menu, items, zones, prices, messages.</span></div>
+    </div>
+    <p style="margin-top:16px">The single fastest way to a <b>real, earning</b> business is Phases 1 + 2 below. The rest you grow into as orders pick up.</p>
+  </section>
+
+  <div class="legend">
+    <span class="pill now">Do now</span>
+    <span class="pill soon">Do soon</span>
+    <span class="pill later">Grow into it</span>
+    <em>← each phase is tagged so you know what's urgent and what can wait.</em>
+  </div>
+
+  <!-- PHASE 1 -->
+  <section class="phase now">
+    <div class="num">1</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="tagrow">
+          <span class="tag t-now">Do now</span>
+          <span class="tag t-cost">~½ day · $0</span>
+        </div>
+        <h3>Put it online</h3>
+        <p class="goal">Goal: a real link, like <b>beefys.netlify.app</b>, that opens on any phone. &nbsp;<a href="STEP-1-github.html" style="color:var(--ketchup);font-weight:700;text-decoration:none;border-bottom:2px solid var(--lettuce)">→ Click-by-click guide for this phase</a></p>
+      </div>
+      <div class="card-body">
+        <ol class="steps">
+          <li><b>Make a free GitHub account</b>
+            <p>Go to <a href="https://github.com">github.com</a> and sign up. GitHub is free online storage for your app's files. No credit card.</p></li>
+          <li><b>Upload the <span class="k">beefys-app</span> folder</b>
+            <p>Create a new repository ("New" → name it <span class="k">beefys-app</span>). On the repo page click <b>"uploading an existing file"</b> and drag in everything from this folder. Done — your files now live online.</p></li>
+          <li><b>Connect it to Netlify</b>
+            <p>Go to <a href="https://netlify.com">netlify.com</a>, sign up with your GitHub account, click <b>"Add new site → Import from GitHub"</b>, pick <span class="k">beefys-app</span>, and hit Deploy. In ~30 seconds you get a live URL. (Vercel works the same way if you prefer.)</p></li>
+          <li><b>Test the link on your real phone</b>
+            <p>Open the URL on your actual phone, not just the computer. Click through Cliente → Operador → Backend. This is your app, live on the internet.</p></li>
+          <li><b>Optional: buy your domain</b>
+            <p>Want <span class="k">pedidos.comebeefys.com</span> instead of a netlify.app link? Buy the domain (~$10–15/year at <a href="https://namecheap.com">Namecheap</a>) and point it at Netlify — Netlify has a one-page guide under "Domain settings".</p></li>
+        </ol>
+        <div class="callout"><span class="ig">⚠︎</span><div><b>One thing to know:</b> the small interface icons load from the internet (a service called Lucide). Once your site is hosted this is totally fine — just know the app needs an internet connection to look perfect.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 2 -->
+  <section class="phase soon">
+    <div class="num">2</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="tagrow">
+          <span class="tag t-soon">Do soon</span>
+          <span class="tag t-cost">~1 day · $0</span>
+        </div>
+        <h3>Make orders actually arrive</h3>
+        <p class="goal">Goal: a real order becomes a real WhatsApp message in your phone. This is a legitimate launch.</p>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--ink-700);margin:4px 0 14px">Your prototype already ends the customer flow with <b>"enviar por WhatsApp"</b> and a payment-proof (comprobante) upload. That is genuinely how many ghost kitchens run — no expensive backend required. Lean into it.</p>
+        <ol class="steps">
+          <li><b>Set up WhatsApp Business</b>
+            <p>Download the free <b>WhatsApp Business</b> app and register your kitchen's order number. Free.</p></li>
+          <li><b>Wire the "send" button to your real number</b>
+            <p>The button should open WhatsApp with the order + total pre-typed, sent to <b>your</b> number (a <span class="k">wa.me</span> link). This is a small code change — <b>I can do this for you</b>; just give me the number.</p></li>
+          <li><b>Receive → verify → cook</b>
+            <p>A real order is now a WhatsApp message with the items, total, and the payment screenshot. You eyeball the comprobante to confirm payment, then cook. The <b>Operador panel becomes your manual checklist</b> for the shift.</p></li>
+          <li><b>Put the link everywhere</b>
+            <p>Add your live URL to the <a href="https://instagram.com/comebeefys">@comebeefys</a> Instagram bio and stories. That's your storefront.</p></li>
+        </ol>
+        <div class="callout win"><span class="ig">★</span><div><b>This counts as live.</b> You can take real orders and real money today on $0 of software. Don't wait for Phase 3 to start selling.</div></div>
+        <div class="callout"><span class="ig">⚠︎</span><div><b>Limit to know:</b> menu edits made in the Backend panel don't save permanently yet — they reset on refresh. For now, tell me your menu changes and I'll bake them in, or move to Phase 3 when you're ready.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 3 -->
+  <section class="phase">
+    <div class="num">3</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="tagrow">
+          <span class="tag t-later">Grow into it</span>
+          <span class="tag t-cost">when volume grows · $0–few hundred</span>
+        </div>
+        <h3>A real backend</h3>
+        <p class="goal">Goal: orders saved automatically, the menu editor actually sticks, the kitchen panel updates by itself.</p>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--ink-700);margin:4px 0 14px">When WhatsApp-by-hand gets busy, this is the upgrade. It's where the app becomes real "software" — orders in a database, a login so only staff see the panels, and the Operador screen lighting up the instant a customer hits send.</p>
+        <ol class="steps">
+          <li><b>Pick a beginner-friendly backend</b>
+            <p>Use a "backend-as-a-service" with a generous free tier — <a href="https://supabase.com">Supabase</a> or <a href="https://firebase.google.com">Firebase</a>. It gives you a database + login without running your own servers.</p></li>
+          <li><b>Store your menu and orders there</b>
+            <p>The Backend panel writes the menu to the database; the Cliente app reads it. Now menu edits are permanent and a submitted order is saved, not lost.</p></li>
+          <li><b>Make the Operador panel live</b>
+            <p>Turn on "real-time" so a new order pops onto the kitchen screen the moment a customer submits — no refresh, no WhatsApp copy-paste.</p></li>
+          <li><b>Add a simple staff login</b>
+            <p>Protect the Operador and Backend panels so only you and your team can open them.</p></li>
+          <li><b>Decide: learn it or hire it</b>
+            <p>You can learn this with Supabase's tutorials, <b>or</b> hand a developer this exact prototype as the spec — it already shows every screen and flow, which saves them (and you) real money. Budget a few hundred dollars for a first version.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 4 -->
+  <section class="phase">
+    <div class="num">4</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="tagrow">
+          <span class="tag t-later">Grow into it</span>
+          <span class="tag t-cost">optional · varies</span>
+        </div>
+        <h3>Payments</h3>
+        <p class="goal">Goal: less manual checking of payment proofs — only when the manual way starts hurting.</p>
+      </div>
+      <div class="card-body">
+        <ol class="steps">
+          <li><b>Stay manual at first — on purpose</b>
+            <p>Pago Móvil / transfer + comprobante screenshot, checked by a human, is valid, free, and what your flow already does. Do <b>not</b> over-engineer payments early.</p></li>
+          <li><b>Automate later if it's worth it</b>
+            <p>When volume justifies it, look at a payment gateway to confirm transfers automatically. Keep it simple; for many small kitchens manual Pago Móvil confirmation stays the practical choice.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 5 -->
+  <section class="phase">
+    <div class="num">5</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="tagrow">
+          <span class="tag t-soon">Before you announce</span>
+          <span class="tag t-cost">½ day</span>
+        </div>
+        <h3>Launch checklist</h3>
+        <p class="goal">Goal: nothing embarrassing happens on opening day.</p>
+      </div>
+      <div class="card-body">
+        <ol class="steps">
+          <li><b>Real phone, full run</b><p>Place a complete test order on a real phone — ideally have a friend do it cold and watch where they get confused.</p></li>
+          <li><b>Real content</b><p>Load your actual menu, real prices, correct BCV rate handling, and real delivery zones. No placeholder items.</p></li>
+          <li><b>Confirm orders reach you</b><p>Make sure a submitted order lands in WhatsApp (Phase 2) or the Operador panel (Phase 3) every single time.</p></li>
+          <li><b>Add basic analytics</b><p>Drop in a free tool so you can see how many people visit and where they drop off.</p></li>
+          <li><b>Announce</b><p>Post the link in your @comebeefys stories and pin it to the bio. You're open.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUMMARY TABLE -->
+  <section class="summary">
+    <h2>Cost &amp; time, at a glance</h2>
+    <table>
+      <thead><tr><th>Phase</th><th>What you get</th><th>Time</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td><b>1 · Online</b></td><td>A real link on any phone</td><td>½ day</td><td class="cost">$0 (+ ~$12/yr domain)</td></tr>
+        <tr><td><b>2 · Orders</b></td><td>Real WhatsApp orders — you're earning</td><td>~1 day</td><td class="cost">$0</td></tr>
+        <tr><td><b>3 · Backend</b></td><td>Saved orders, live panel, staff login</td><td>1–3 weeks</td><td class="cost">$0–few hundred</td></tr>
+        <tr><td><b>4 · Payments</b></td><td>Less manual checking</td><td>later</td><td class="cost">varies</td></tr>
+        <tr><td><b>5 · Launch</b></td><td>A clean opening day</td><td>½ day</td><td class="cost">$0</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- NEXT -->
+  <section class="next">
+    <h2>What I can do next for you</h2>
+    <p>You don't have to do the technical bits alone. Tell me which and I'll handle it right here:</p>
+    <ul>
+      <li><span class="ar">→</span> Wire the WhatsApp "send" button to your real number</li>
+      <li><span class="ar">→</span> Prep the files clean and GitHub-ready for deploy</li>
+      <li><span class="ar">→</span> Bake your real menu &amp; prices into the app</li>
+      <li><span class="ar">→</span> Draft the Supabase database setup for Phase 3</li>
+      <li><span class="ar">→</span> Write a plain-language brief to hand a developer</li>
+      <li><span class="ar">→</span> Make a printable one-page "open day" checklist</li>
+    </ul>
+  </section>
+
+  <p class="foot">Beefy's Design System · Más carne, menos drama · @comebeefys</p>
+
+</main>
+</body>
+</html>

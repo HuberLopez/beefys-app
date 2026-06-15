@@ -1,0 +1,53 @@
+/* Beefys — base element defaults.
+   Light reset + brand defaults so any consumer page inherits the right feel. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tracking-normal); /* brand rule: never tighten */
+  color: var(--text-body);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: var(--fw-black);
+  line-height: var(--lh-tight);
+  color: var(--text-strong);
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+/* Brand display helper: loud, uppercase, black weight */
+.beefy-display {
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-normal);
+}
+
+/* Mono label: the recurring small caps-style tag used across the book */
+.beefy-label {
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+}
+
+::selection {
+  background: var(--beefy-lettuce);
+  color: var(--ink-900);
+}

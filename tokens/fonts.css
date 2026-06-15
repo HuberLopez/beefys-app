@@ -1,0 +1,61 @@
+/* Beefys — Webfonts
+   Slussen Mono (Blaze Type) is the ONE typeface of the brand.
+   The "Beefy" wordmark is a separate bold script supplied as a logo asset (assets/logo-*.png),
+   never set as live type. */
+
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-MediumItalic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-Semibold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Slussen Mono";
+  src: url("../assets/fonts/SlussenMono-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}

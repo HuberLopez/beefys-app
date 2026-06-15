@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beefy's — Panel del operador</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+:root{
+  --bg:#F4F4F4; --surface:#FFFFFF; --ink:#2C2C2C; --ink-2:#6B6B6B; --ink-3:#9A968F;
+  --line:#E4E4E4; --line-2:#D7D4CE;
+  --brand:#ED3D00; --brand-tint:#FFE7DE; --brand-deep:#B5300A;
+  --ok:#1F8A4C; --ok-tint:#E2F3E8; --ok-deep:#176B3A;
+  --warn-tint:#FFEFD9; --warn-deep:#8A5A0E;
+  --info-tint:#F8E9F8; --info-deep:#8A3D8D;
+  --route-tint:#FBFBC9; --route-deep:#5C5E00;
+  --bad-tint:#FBE9E9; --bad-deep:#B5300A;
+  --dark:#2C2C2C; --dark-ink:#FFFFFF;
+  --lettuce:#E3E600;
+  --mono:"Slussen Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r-m:12px; --r-l:18px; --r-pill:999px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--mono);letter-spacing:normal;background:var(--bg);min-height:100vh;padding:28px 14px;color:var(--ink);display:flex;flex-direction:column;align-items:center}
+[data-lucide],svg.lucide{width:1em;height:1em;display:inline-block;vertical-align:-0.16em;stroke-width:2.2;flex:none}
+.demo-tag{font-size:11px;font-weight:500;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px}
+.panel{width:100%;max-width:860px;background:var(--surface);border:2px solid var(--ink);border-radius:20px;overflow:hidden;box-shadow:6px 8px 0 var(--ink)}
+.panel-head{display:flex;align-items:center;gap:11px;padding:14px 18px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+#body{padding:16px 18px;background:#F7F6F1;min-height:420px}
+button{cursor:pointer;border:none;font-family:inherit;letter-spacing:normal}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:var(--r-l)}
+.note{font-size:11.5px;color:var(--ink-3);max-width:860px;margin-top:14px;line-height:1.5;text-align:center}
+.lbl{font-size:10px;font-weight:500;text-transform:uppercase;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="demo-tag">Panel del operador · cocina</div>
+<div class="panel">
+  <div class="panel-head">
+    <img src="assets/logo-beefy-ketchup.png" alt="Beefy's" style="height:26px;width:auto;flex:none">
+    <div style="flex:1;min-width:150px">
+      <div style="font-size:13.5px;font-weight:900;text-transform:uppercase">Panel del turno</div>
+      <div style="font-size:11px;color:var(--ink-3)">Turno en curso — tasa BCV <span id="ratelbl">…</span></div>
+    </div>
+    <div id="tabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
+  <div id="body"></div>
+</div>
+<p class="note">Verifica el pago de María (ref ···8821): la orden pasa a Confirmada y se registra el WhatsApp automático. Avanza estados con un tap y mira el Cuadre recalcularse en vivo desde v_shift_reconciliation.</p>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="./store.js"></script>
+<script>
+const S=window.BeefyStore; const DB=S.load();
+let R=+DB.business.rate;
+const OKEY="beefys_oper_auth";
+function ic(n,sz){return `<i data-lucide="${n}" style="font-size:${sz}px"></i>`}
+const fU=n=>"$"+n.toFixed(2);
+const fV=n=>"Bs. "+n.toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2});
+const ST={pending:["Por verificar","var(--warn-tint)","var(--warn-deep)"],confirmed:["Confirmada","var(--info-tint)","var(--info-deep)"],preparing:["En cocina","var(--brand-tint)","var(--brand-deep)"],out:["En camino","var(--route-tint)","var(--route-deep)"],delivered:["Entregada","var(--ok-tint)","var(--ok-deep)"]};
+const NEXT={confirmed:["preparing","Pasar a cocina"],preparing:["out","Despachar"],out:["delivered","Entregada"]};
+let O=[
+{code:"BF-3K9D",name:"María Rodríguez",items:"Beefy Doble x2 (extra tocineta) · Coca-Cola x2",tot:24,m:"Pago Móvil",ref:"8821",bank:"0102 · 0412-***-4567",st:"pending",wa:["Pedido recibido ✓"],time:"10:42"},
+{code:"BF-2H7A",name:"Carlos Pérez",items:"Combo Familiar · Tequeños x6",tot:29,m:"Zelle",ref:null,sender:"carlosp88@gmail.com",st:"pending",wa:["Pedido recibido ✓"],time:"10:38"},
+{code:"BF-9Q1M",name:"Ana Gómez",items:"Beefy Triple · Papas",tot:13.5,m:"Efectivo",ref:null,change:"Vuelto: $6.50",st:"confirmed",wa:["Pedido recibido ✓"],time:"10:31"},
+{code:"BF-7T4C",name:"Luis Marcano",items:"Crispy Chicken x2 · Malta x2",tot:17,m:"Transferencia",ref:"4410",bank:"0134",st:"preparing",wa:["Pedido recibido ✓","Pago verificado ✓"],time:"10:18"},
+{code:"BF-5R8B",name:"Daniela Rojas",items:"Combo Beefy Doble",tot:11,m:"Pago Móvil",ref:"1276",bank:"0134",st:"delivered",wa:["Pedido recibido ✓","Pago verificado ✓"],time:"9:52"}];
+let tab="ordenes";
+
+const chip=st=>{const s=ST[st];return `<span style="background:${s[1]};color:${s[2]};border-radius:99px;padding:4px 11px;font-size:11px;font-weight:700">${s[0]}</span>`};
+
+function tabs(){const T=[["ordenes","Órdenes",O.filter(o=>o.st!="delivered").length],["pagos","Verificar pagos",O.filter(o=>o.st=="pending"&&o.m!="Efectivo").length],["cuadre","Cuadre",null]];
+document.getElementById("tabs").innerHTML=T.map(t=>`<button onclick="setTab('${t[0]}')" style="border-radius:99px;padding:8px 14px;font-size:12px;font-weight:700;border:2px solid ${tab==t[0]?"var(--dark)":"var(--line-2)"};background:${tab==t[0]?"var(--dark)":"var(--surface)"};color:${tab==t[0]?"var(--dark-ink)":"var(--ink-2)"}">${t[1]}${t[2]?` <span style="background:${tab==t[0]?"var(--lettuce)":"var(--line-2)"};color:${tab==t[0]?"var(--ink)":"var(--ink-2)"};border-radius:99px;padding:1px 7px;font-size:10px;font-weight:900;margin-left:2px">${t[2]}</span>`:""}</button>`).join("")}
+
+function card(o){const i=O.indexOf(o);const nx=NEXT[o.st];
+return `<div class="card" style="padding:13px 15px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:13px;font-weight:900">${o.code}</span>${chip(o.st)}
+    <span style="font-size:11px;color:var(--ink-3)">${o.time}</span><span style="flex:1"></span>
+    <span style="font-size:15px;font-weight:900">${fU(o.tot)}</span>
+  </div>
+  <div style="font-size:12.5px;color:var(--ink-2);margin-top:5px">${o.name} · ${o.items}</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap">
+    <span style="font-size:11.5px;color:var(--ink-3)">${ic("credit-card",13)} ${o.m}${o.ref?` · ref ···${o.ref}`:""}${o.sender?` · ${o.sender}`:""}${o.change?` · ${o.change}`:""}</span>
+    <span style="flex:1"></span>
+    ${o.wa.map(w=>`<span style="font-size:10.5px;color:var(--ok-deep);background:var(--ok-tint);border-radius:99px;padding:3px 9px;font-weight:700;display:inline-flex;align-items:center;gap:4px">${ic("message-circle",11)} ${w}</span>`).join("")}
+    ${nx?`<button onclick="adv(${i})" style="background:var(--dark);color:var(--dark-ink);border-radius:var(--r-pill);padding:8px 14px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px">${nx[1]} ${ic("arrow-right",12)}</button>`:""}
+    ${o.st=="pending"&&o.m!="Efectivo"?`<button onclick="setTab('pagos')" style="background:var(--warn-tint);color:var(--warn-deep);border-radius:var(--r-pill);padding:8px 14px;font-size:12px;font-weight:700">Verificar pago</button>`:""}
+  </div></div>`}
+
+function vOrdenes(){const act=O.filter(o=>o.st!="delivered");const done=O.filter(o=>o.st=="delivered");
+return `<div style="display:flex;flex-direction:column;gap:10px">${act.map(card).join("")}
+${done.length?`<div class="lbl" style="font-weight:700;margin-top:4px">Entregadas este turno</div>${done.map(card).join("")}`:""}</div>`}
+
+function vPagos(){const q=O.filter(o=>o.st=="pending"&&o.m!="Efectivo");
+if(!q.length)return `<div style="text-align:center;padding:60px 0;color:var(--ink-3);font-size:13px"><div style="color:var(--ok)">${ic("check",28)}</div><br>No hay pagos pendientes — todo verificado</div>`;
+return `<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font-size:12px;color:var(--ink-2)">Coteja los últimos 4 dígitos contra el estado de cuenta del banco. Al verificar, la orden pasa a cocina y el cliente recibe su WhatsApp automático.</div>
+${q.map(o=>{const i=O.indexOf(o);return `<div class="card" style="padding:13px 15px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+  <div style="flex:1;min-width:170px"><div style="font-size:13px;font-weight:900">${o.code} · ${o.name}</div>
+  <div style="font-size:11.5px;color:var(--ink-3)">${o.m}${o.bank?` · banco ${o.bank}`:""}${o.sender?` · ${o.sender}`:""}</div></div>
+  ${o.ref?`<div style="text-align:center"><div class="lbl">Referencia</div>
+  <div style="font-size:20px;font-weight:900">···${o.ref}</div></div>`:""}
+  <div style="text-align:right"><div style="font-size:15px;font-weight:900">${fU(o.tot)}</div>
+  <div style="font-size:11px;color:var(--ink-3)">${fV(o.tot*R)}</div></div>
+  <div style="display:flex;gap:6px">
+    <button onclick="verify(${i})" style="background:var(--ok);color:#fff;border-radius:var(--r-pill);padding:10px 16px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px">${ic("check",13)} Verificar</button>
+    <button onclick="reject(${i})" style="background:var(--bad-tint);color:var(--bad-deep);border-radius:var(--r-pill);padding:10px 14px;font-size:12.5px;font-weight:700">Rechazar</button>
+  </div></div>`}).join("")}</div>`}
+
+function mc(l,v){return `<div style="background:var(--surface);border:2px solid var(--line);border-radius:var(--r-m);padding:14px 16px"><div style="font-size:12px;color:var(--ink-2)">${l}</div><div style="font-size:23px;font-weight:900;margin-top:3px">${v}</div></div>`}
+
+function vCuadre(){const M={};
+O.forEach(o=>{M[o.m]=M[o.m]||{n:0,usd:0,pend:0};M[o.m].n++;M[o.m].usd+=o.tot;if(o.st=="pending")M[o.m].pend++});
+const tot=Object.values(M).reduce((a,x)=>a+x.usd,0);const pend=Object.values(M).reduce((a,x)=>a+x.pend,0);
+return `<div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px">
+${mc("Órdenes del turno",O.length)}${mc("Total esperado",fU(tot))}${mc("Equivalente Bs",fV(tot*R))}${mc("Pagos por verificar",pend)}</div>
+<div class="card" style="padding:4px 16px">
+${Object.entries(M).map(([m,x])=>`<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:2px solid var(--line)">
+  <span style="font-size:13px;font-weight:700;flex:1">${m}</span>
+  <span style="font-size:11.5px;color:var(--ink-3)">${x.n} pago${x.n>1?"s":""}${x.pend?` · ${x.pend} pendiente`:""}</span>
+  <span style="font-size:13px;font-weight:900;min-width:74px;text-align:right">${fU(x.usd)}</span>
+  <span style="font-size:11px;color:var(--ink-3);min-width:110px;text-align:right">${fV(x.usd*R)}</span></div>`).join("")}
+<div style="display:flex;justify-content:space-between;padding:13px 0;font-size:14px;font-weight:900"><span>Total del turno</span><span>${fU(tot)} · ${fV(tot*R)}</span></div></div>
+<div style="font-size:11px;color:var(--ink-3);margin-top:10px;line-height:1.5">Estos montos salen de la vista v_shift_reconciliation. Al cerrar turno se comparan contra lo contado físicamente y lo visto en banco; la diferencia queda registrada en shift_closures.</div></div>`}
+
+function render(){tabs();document.getElementById("body").innerHTML={ordenes:vOrdenes,pagos:vPagos,cuadre:vCuadre}[tab]();const rl=document.getElementById("ratelbl");if(rl)rl.textContent=R.toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2});if(window.lucide)window.lucide.createIcons()}
+window.setTab=t=>{tab=t;render()};
+window.adv=i=>{O[i].st=NEXT[O[i].st][0];render()};
+window.verify=i=>{O[i].st="confirmed";O[i].wa.push("Pago verificado ✓");tab="ordenes";render()};
+window.reject=i=>{O[i].wa.push("Referencia rechazada ✗");render()};
+
+function boot(){render();S.resolveRate(DB).then(r=>{R=r;render();});}
+function showLogin(){
+  const ov=document.createElement("div");
+  ov.style.cssText="position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px;z-index:999";
+  ov.innerHTML='<div style="width:100%;max-width:340px;background:#fff;border:2px solid var(--ink);border-radius:24px;box-shadow:6px 8px 0 rgba(0,0,0,.4);padding:30px 26px"><div style="display:flex;justify-content:center;margin-bottom:14px;color:var(--brand)"><i data-lucide="chef-hat" style="font-size:34px"></i></div><h1 style="font-weight:900;font-size:22px;text-transform:uppercase;margin:0 0 4px;text-align:center">Cocina</h1><p style="text-align:center;color:var(--ink-3);font-size:12.5px;margin:0 0 20px">Acceso del operador</p><input id="ou" placeholder="Usuario" autocomplete="username" style="width:100%;border:2px solid var(--line);border-radius:12px;padding:11px 13px;font-family:var(--mono);font-size:14.5px;margin-bottom:12px"/><input id="op" type="password" placeholder="Contraseña" autocomplete="current-password" style="width:100%;border:2px solid var(--line);border-radius:12px;padding:11px 13px;font-family:var(--mono);font-size:14.5px"/><div id="oerr" style="color:var(--brand);font-size:12px;font-weight:700;height:16px;margin:6px 0"></div><button id="ob" style="width:100%;background:var(--brand);color:#fff;border-radius:999px;padding:13px;font-family:var(--mono);font-weight:700;font-size:15px">Entrar</button></div>';
+  document.body.appendChild(ov);
+  if(window.lucide)window.lucide.createIcons();
+  const go=()=>{const u=ov.querySelector("#ou").value.trim(),p=ov.querySelector("#op").value,op=DB.users.operador;if(u===op.user&&p===op.pass){sessionStorage.setItem(OKEY,"1");ov.remove();boot();}else ov.querySelector("#oerr").textContent="Usuario o contraseña incorrectos";};
+  ov.querySelector("#ob").onclick=go;
+  ov.querySelector("#op").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+}
+if(sessionStorage.getItem(OKEY))boot();else showLogin();
+</script>
+</body>
+</html>

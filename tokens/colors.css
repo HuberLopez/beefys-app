@@ -1,0 +1,53 @@
+/* Beefys — Color tokens
+   Pulled directly from the "COLORES" board of the Manual de Marca.
+   No gradients. Colors are used FLAT and LOUD. */
+
+:root {
+  /* ── Brand palette (named, verbatim from the brand book) ── */
+  --beefy-ketchup: #ED3D00;   /* the hero red-orange — primary brand color */
+  --beefy-lettuce: #E3E600;   /* acid yellow-green — the signature accent / doodle ink */
+  --beefy-cheese:  #FFA63B;   /* warm orange */
+  --teenage-pink:  #EBB7ED;   /* soft pop pink */
+  --standard-grey: #F4F4F4;   /* near-white surface grey */
+  --standard-black:#3D3D3D;   /* brand "black" — a soft charcoal, never pure #000 */
+
+  /* support neutrals derived from the book's usage */
+  --ink-900: #2C2C2C;         /* densest body text (rgb 44,44,44) */
+  --ink-700: #3D3D3D;         /* standard black */
+  --ink-500: #6B6B6B;         /* muted text */
+  --ink-300: #B4B4B4;         /* disabled / hint */
+  --line-200: #E4E4E4;        /* hairline borders on light */
+  --white: #FFFFFF;
+
+  /* tints for surfaces (flat, no gradients) */
+  --ketchup-tint: #FFE7DE;    /* faint ketchup wash */
+  --lettuce-tint: #FBFBC9;    /* faint lettuce wash */
+  --cheese-tint:  #FFEFD9;
+
+  /* ── Semantic aliases ── */
+  --color-primary: var(--beefy-ketchup);
+  --color-primary-ink: var(--white);
+  --color-accent: var(--beefy-lettuce);
+  --color-accent-ink: var(--ink-900);
+
+  --bg-page: var(--white);
+  --bg-subtle: var(--standard-grey);
+  --surface-card: var(--white);
+  --surface-inverse: var(--ink-900);
+
+  --text-strong: var(--ink-900);
+  --text-body: var(--ink-700);
+  --text-muted: var(--ink-500);
+  --text-on-primary: var(--white);
+  --text-on-accent: var(--ink-900);
+  --text-link: var(--beefy-ketchup);
+
+  --border-default: var(--line-200);
+  --border-strong: var(--ink-900);
+
+  /* status — kept inside the warm brand family */
+  --status-success: #1F8A4C;
+  --status-warning: var(--beefy-cheese);
+  --status-error: var(--beefy-ketchup);
+  --status-info: var(--teenage-pink);
+}

@@ -1,0 +1,47 @@
+/* Beefys — Spacing, radii, shadows, motion
+   The brand is bold and chunky: generous padding, big rounded "burger-bun" radii,
+   crisp flat fills. Shadows are used sparingly and softly (no heavy drop shadows). */
+
+:root {
+  /* spacing scale (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* radii — soft, friendly, bun-like. Pills for buttons/chips. */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  /* borders */
+  --border-width: 2px;       /* @kind spacing */
+  --border-width-bold: 3px;  /* @kind spacing */
+
+  /* shadows — soft, low, warm-neutral; never harsh */
+  --shadow-sm: 0 1px 2px rgba(44,44,44,0.06);
+  --shadow-md: 0 6px 18px rgba(44,44,44,0.08);
+  --shadow-lg: 0 14px 40px rgba(44,44,44,0.12);
+  --shadow-pop: 0 4px 0 var(--ink-900); /* playful "sticker" offset shadow */
+
+  /* motion — snappy and bouncy, matching the energetic tone */
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);  /* @kind other */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);     /* @kind other */
+  --dur-fast: 120ms;  /* @kind other */
+  --dur-base: 200ms;  /* @kind other */
+  --dur-slow: 320ms;  /* @kind other */
+
+  /* layout */
+  --container-max: 1200px;  /* @kind spacing */
+  --tap-min: 44px;          /* @kind spacing */
+}

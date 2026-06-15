@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Beefy's · Backend</title>
+<link rel="stylesheet" href="./styles.css" />
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--standard-grey); color: var(--ink-900); font-family: var(--font-mono); }
+  button { font-family: var(--font-mono); cursor: pointer; }
+  input, select, textarea { font-family: var(--font-mono); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink-900) !important; }
+  .ip { width: 100%; border: 2px solid var(--line-200); border-radius: var(--radius-md); padding: 11px 13px; font-size: 14.5px; color: var(--ink-900); background: var(--white); }
+  .lbl { font-weight: 700; font-size: 11.5px; text-transform: uppercase; color: var(--ink-500); letter-spacing: .02em; margin-bottom: 6px; display: block; }
+  .card { background: var(--white); border: 2px solid var(--line-200); border-radius: var(--radius-lg); padding: 18px; }
+  .btn { border: none; border-radius: var(--radius-pill); padding: 11px 20px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-solid { background: var(--ink-900); color: var(--white); }
+  .btn-ket { background: var(--beefy-ketchup); color: var(--white); }
+  .btn-ghost { background: transparent; color: var(--ink-700); border: 2px solid var(--line-200); }
+  .btn-sm { padding: 7px 13px; font-size: 13px; }
+  .sw { width: 46px; height: 28px; border-radius: 999px; border: none; position: relative; transition: background .15s; flex: 0 0 auto; }
+  .sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .15s; }
+  .sw.on { background: var(--beefy-lettuce); } .sw.on i { left: 21px; }
+  .sw.off { background: var(--line-200); }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="./store.js"></script>
+<script>
+const S = window.BeefyStore;
+const $ = (h) => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
+const esc = S.esc;
+const ic = {
+  menu:'<path d="M3 12h18M3 6h18M3 18h18"/>', store:'<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M2 7h20"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
+  history:'<path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/>',
+  plus:'<path d="M5 12h14M12 5v14"/>', trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  cam:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>', lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>'
+};
+const svg = (n, s=20, sw=2.2) => '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round">'+(ic[n]||'')+'</svg>';
+
+let db = S.load();
+let draft = JSON.parse(JSON.stringify(db));
+let tab = 'menu';
+const dirty = () => JSON.stringify(draft) !== JSON.stringify(db);
+const SKEY_AUTH = 'beefys_admin_auth';
+
+/* ---------------- LOGIN ---------------- */
+function loginView() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const wrap = $('<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--ink-900)"></div>');
+  const box = $('<div style="width:100%;max-width:360px;background:var(--white);border-radius:var(--radius-xl,28px);padding:32px 28px"></div>');
+  box.innerHTML =
+    '<div style="display:flex;justify-content:center;margin-bottom:18px;color:var(--beefy-ketchup)">'+svg('lock',34,2.4)+'</div>'+
+    '<h1 style="text-align:center;font-weight:900;font-size:24px;text-transform:uppercase;margin:0 0 4px">Backend</h1>'+
+    '<p style="text-align:center;color:var(--ink-500);font-size:13px;margin:0 0 22px">Acceso del gerente</p>'+
+    '<label class="lbl">Usuario</label><input id="lu" class="ip" autocomplete="username" style="margin-bottom:14px" />'+
+    '<label class="lbl">Contraseña</label><input id="lp" type="password" autocomplete="current-password" class="ip" style="margin-bottom:8px" />'+
+    '<div id="lerr" style="color:var(--beefy-ketchup);font-size:12.5px;font-weight:700;height:18px;margin-bottom:6px"></div>'+
+    '<button id="lbtn" class="btn btn-ket" style="width:100%;justify-content:center;font-size:15px;padding:13px">Entrar</button>';
+  wrap.appendChild(box); app.appendChild(wrap);
+  const tryLogin = () => {
+    const u = document.getElementById('lu').value.trim(), p = document.getElementById('lp').value;
+    const g = draft.users.gerente;
+    if (u === g.user && p === g.pass) { sessionStorage.setItem(SKEY_AUTH, '1'); render(); }
+    else document.getElementById('lerr').textContent = 'Usuario o contraseña incorrectos';
+  };
+  document.getElementById('lbtn').onclick = tryLogin;
+  document.getElementById('lp').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin(); });
+}
+
+/* ---------------- SHELL ---------------- */
+function render() {
+  if (!sessionStorage.getItem(SKEY_AUTH)) return loginView();
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const tabs = [['menu','Menú','menu'],['negocio','Negocio','store'],['usuarios','Usuarios','users'],['historial','Historial','history']];
+  const shell = $('<div style="max-width:780px;margin:0 auto;padding:0 16px 140px"></div>');
+  // header
+  const head = $('<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 2px 14px"></div>');
+  head.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="font-weight:900;font-size:20px;text-transform:uppercase">Beefy\'s</span><span style="background:var(--beefy-lettuce);color:var(--ink-900);font-weight:700;font-size:11px;padding:4px 9px;border-radius:999px">BACKEND</span></div>';
+  const lo = $('<button class="btn btn-ghost btn-sm">'+svg('logout',16)+'Salir</button>');
+  lo.onclick = () => { sessionStorage.removeItem(SKEY_AUTH); render(); };
+  head.appendChild(lo); shell.appendChild(head);
+  // tabbar
+  const tb = $('<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:16px"></div>');
+  tabs.forEach(([id,label,icon]) => {
+    const on = id === tab;
+    const b = $('<button class="btn '+(on?'btn-solid':'btn-ghost')+' btn-sm" style="flex:0 0 auto">'+svg(icon,16)+label+'</button>');
+    b.onclick = () => { tab = id; render(); };
+    tb.appendChild(b);
+  });
+  shell.appendChild(tb);
+  const content = $('<div id="content"></div>');
+  shell.appendChild(content);
+  app.appendChild(shell);
+  ({menu:renderMenu, negocio:renderNegocio, usuarios:renderUsuarios, historial:renderHistorial}[tab])(content);
+  renderDirtyBar();
+}
+
+/* dirty save/cancel bar */
+function renderDirtyBar() {
+  const ex = document.getElementById('dbar'); if (ex) ex.remove();
+  if (!dirty()) return;
+  const bar = $('<div id="dbar" style="position:fixed;left:0;right:0;bottom:0;background:var(--ink-900);color:var(--white);padding:14px 18px calc(14px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:50"></div>');
+  bar.innerHTML = '<span style="font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:var(--beefy-lettuce)"></span>Tienes cambios sin guardar</span>';
+  const grp = $('<div style="display:flex;gap:8px"></div>');
+  const cancel = $('<button class="btn btn-ghost btn-sm" style="color:var(--white);border-color:rgba(255,255,255,.3)">Cancelar</button>');
+  cancel.onclick = () => { draft = JSON.parse(JSON.stringify(db)); render(); };
+  const save = $('<button class="btn btn-sm" style="background:var(--beefy-lettuce);color:var(--ink-900)">'+svg('check',16)+'Guardar cambios</button>');
+  save.onclick = doSave;
+  grp.appendChild(cancel); grp.appendChild(save); bar.appendChild(grp);
+  document.body.appendChild(bar);
+}
+function changedSections() {
+  const out = [];
+  if (JSON.stringify(draft.items)!==JSON.stringify(db.items) || JSON.stringify(draft.extras)!==JSON.stringify(db.extras) || JSON.stringify(draft.categories)!==JSON.stringify(db.categories)) out.push('Menú');
+  if (JSON.stringify(draft.business)!==JSON.stringify(db.business) || JSON.stringify(draft.payment)!==JSON.stringify(db.payment)) out.push('Negocio');
+  if (JSON.stringify(draft.users)!==JSON.stringify(db.users)) out.push('Usuarios');
+  return out;
+}
+function doSave() {
+  const who = draft.users.gerente.name || 'Gerente';
+  const what = 'Editó: ' + (changedSections().join(', ') || 'configuración');
+  S.save(draft, who, what);
+  db = JSON.parse(JSON.stringify(draft));
+  render();
+}
+
+/* ---------------- MENU TAB ---------------- */
+function renderMenu(c) {
+  c.innerHTML = '';
+  draft.categories.forEach((catName) => {
+    const head = $('<div style="display:flex;align-items:center;justify-content:space-between;margin:8px 2px 10px"></div>');
+    head.innerHTML = '<h2 style="font-weight:900;font-size:16px;text-transform:uppercase;margin:0">'+esc(catName)+'</h2>';
+    const add = $('<button class="btn btn-ghost btn-sm">'+svg('plus',15)+'Producto</button>');
+    add.onclick = () => { draft.items.push({ id: S.uid(), cat: catName, n: 'Nuevo producto', d: '', p: 0, photo: null, c: '#FFEFD9', t: '#8A5A0E', avail: true, ex: false, tag: '', doodle: 'star' }); render(); };
+    head.appendChild(add); c.appendChild(head);
+    draft.items.filter(i => i.cat === catName).forEach(item => c.appendChild(itemCard(item)));
+  });
+  // extras editor
+  const exHead = $('<h2 style="font-weight:900;font-size:16px;text-transform:uppercase;margin:26px 2px 10px">Extras (para "Hazla tuya")</h2>');
+  c.appendChild(exHead);
+  const exCard = $('<div class="card"></div>');
+  draft.extras.forEach((e, i) => {
+    const row = $('<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"></div>');
+    const nm = $('<input class="ip" value="'+esc(e.n)+'" style="flex:1" />');
+    nm.oninput = () => { e.n = nm.value; touch(); };
+    const pr = $('<input class="ip" value="'+e.p+'" inputmode="decimal" style="width:90px" />');
+    pr.oninput = () => { e.p = parseFloat(pr.value)||0; touch(); };
+    const del = $('<button class="btn btn-ghost btn-sm" style="color:var(--beefy-ketchup);border-color:var(--line-200)">'+svg('trash',15)+'</button>');
+    del.onclick = () => { draft.extras.splice(i,1); render(); };
+    row.appendChild($('<span style="color:var(--ink-300);font-weight:700">+$</span>'));
+    row.appendChild(nm); row.appendChild(pr); row.appendChild(del); exCard.appendChild(row);
+  });
+  const addEx = $('<button class="btn btn-ghost btn-sm" style="margin-top:4px">'+svg('plus',15)+'Agregar extra</button>');
+  addEx.onclick = () => { draft.extras.push({ id: S.uid(), n: 'Nuevo extra', p: 1 }); render(); };
+  exCard.appendChild(addEx); c.appendChild(exCard);
+}
+
+function itemCard(item) {
+  const card = $('<div class="card" style="margin-bottom:12px;display:flex;gap:14px"></div>');
+  // photo
+  const photoWrap = $('<div style="flex:0 0 auto"></div>');
+  const src = S.photoSrc(item, './');
+  const ph = $('<label style="width:84px;height:84px;border-radius:var(--radius-md);background:'+(src?'var(--standard-grey)':(item.c||'#FFEFD9'))+';display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;position:relative;color:var(--ink-500)"></label>');
+  ph.innerHTML = src ? '<img src="'+src+'" style="width:118%;height:118%;object-fit:contain" />' : svg('cam',26);
+  const camBadge = $('<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:9.5px;font-weight:700;text-align:center;padding:2px 0">FOTO</span>');
+  ph.appendChild(camBadge);
+  const file = $('<input type="file" accept="image/*" style="display:none" />');
+  file.onchange = () => { const f = file.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { item.photo = r.result; render(); }; r.readAsDataURL(f); };
+  ph.appendChild(file); photoWrap.appendChild(ph);
+  if (src) { const rm = $('<button class="btn-sm" style="display:block;width:100%;margin-top:6px;background:none;border:none;color:var(--beefy-ketchup);font-weight:700;font-size:11px">Quitar</button>'); rm.onclick = () => { item.photo = null; render(); }; photoWrap.appendChild(rm); }
+  card.appendChild(photoWrap);
+  // fields
+  const f = $('<div style="flex:1;min-width:0"></div>');
+  const nm = $('<input class="ip" value="'+esc(item.n)+'" style="font-weight:700;margin-bottom:7px" />'); nm.oninput = () => { item.n = nm.value; touch(); };
+  const ds = $('<textarea class="ip" rows="2" style="margin-bottom:7px;resize:vertical">'+esc(item.d)+'</textarea>'); ds.oninput = () => { item.d = ds.value; touch(); };
+  const rowf = $('<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>');
+  const price = $('<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--ink-500)">$</span></div>');
+  const pin = $('<input class="ip" value="'+item.p+'" inputmode="decimal" style="width:80px" />'); pin.oninput = () => { item.p = parseFloat(pin.value)||0; touch(); }; price.appendChild(pin);
+  rowf.appendChild(price);
+  const catSel = $('<select class="ip" style="width:auto">'+draft.categories.map(cc=>'<option '+(cc===item.cat?'selected':'')+'>'+esc(cc)+'</option>').join('')+'</select>');
+  catSel.onchange = () => { item.cat = catSel.value; render(); }; rowf.appendChild(catSel);
+  const tag = $('<input class="ip" value="'+esc(item.tag||'')+'" placeholder="Etiqueta (ej. Picante)" style="width:150px" />'); tag.oninput = () => { item.tag = tag.value; touch(); }; rowf.appendChild(tag);
+  f.appendChild(nm); f.appendChild(ds); f.appendChild(rowf);
+  // toggles row
+  const tog = $('<div style="display:flex;gap:18px;align-items:center;margin-top:12px;flex-wrap:wrap"></div>');
+  tog.appendChild(toggle('Disponible', item.avail!==false, (v)=>{ item.avail=v; render(); }));
+  tog.appendChild(toggle('Pide extras', !!item.ex, (v)=>{ item.ex=v; touch(); }));
+  const del = $('<button class="btn btn-ghost btn-sm" style="margin-left:auto;color:var(--beefy-ketchup);border-color:var(--line-200)">'+svg('trash',15)+'Borrar</button>');
+  del.onclick = () => { if (confirm('¿Borrar "'+item.n+'"?')) { draft.items = draft.items.filter(x=>x!==item); render(); } };
+  tog.appendChild(del); f.appendChild(tog);
+  card.appendChild(f);
+  return card;
+}
+
+function toggle(label, on, fn) {
+  const w = $('<div style="display:flex;align-items:center;gap:8px"></div>');
+  const sw = $('<button class="sw '+(on?'on':'off')+'"><i></i></button>');
+  sw.onclick = () => fn(!on);
+  w.appendChild(sw); w.appendChild($('<span style="font-size:13px;font-weight:700;color:var(--ink-700)">'+label+'</span>'));
+  return w;
+}
+// update draft + dirty bar without full re-render (keeps input focus)
+function touch() { renderDirtyBar(); }
+
+/* ---------------- NEGOCIO TAB ---------------- */
+function field(label, value, fn, opts={}) {
+  const w = $('<div style="margin-bottom:14px"></div>');
+  w.appendChild($('<label class="lbl">'+label+'</label>'));
+  const i = $('<input class="ip" value="'+esc(value)+'" '+(opts.inputmode?'inputmode="'+opts.inputmode+'"':'')+' '+(opts.ph?'placeholder="'+esc(opts.ph)+'"':'')+' />');
+  i.oninput = () => { fn(i.value); touch(); };
+  w.appendChild(i);
+  if (opts.hint) w.appendChild($('<div style="font-size:12px;color:var(--ink-300);margin-top:5px">'+opts.hint+'</div>'));
+  return w;
+}
+function renderNegocio(c) {
+  c.innerHTML = '';
+  const b = draft.business;
+  const c1 = $('<div class="card" style="margin-bottom:14px"></div>');
+  c1.appendChild($('<h2 style="font-weight:900;font-size:15px;text-transform:uppercase;margin:0 0 14px">Tienda &amp; entregas</h2>'));
+  c1.appendChild(field('Nombre del negocio', b.name, v=>b.name=v));
+  c1.appendChild(field('Zona / ciudad', b.zone, v=>b.zone=v));
+  c1.appendChild(field('Dirección del local (para pickup)', b.pickupAddress, v=>b.pickupAddress=v, {hint:'Lo que ve el cliente cuando elige "Pickup"'}));
+  const g2 = $('<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>');
+  g2.appendChild(field('Tiempo de delivery', b.etaDelivery, v=>b.etaDelivery=v, {ph:'25–35 min'}));
+  g2.appendChild(field('Tiempo de pickup', b.etaPickup, v=>b.etaPickup=v, {ph:'Listo en ~15 min'}));
+  c1.appendChild(g2);
+  c1.appendChild(field('Costo de envío ($)', b.deliveryFee, v=>b.deliveryFee=parseFloat(v)||0, {inputmode:'decimal'}));
+  c.appendChild(c1);
+
+  // WhatsApp + rate
+  const c2 = $('<div class="card" style="margin-bottom:14px"></div>');
+  c2.appendChild($('<h2 style="font-weight:900;font-size:15px;text-transform:uppercase;margin:0 0 14px">Pedidos &amp; tasa</h2>'));
+  c2.appendChild(field('WhatsApp de pedidos', b.whatsapp, v=>b.whatsapp=v.replace(/[^0-9]/g,''), {hint:'Solo números con código de país. Ej: 584148367027', inputmode:'tel'}));
+  // rate mode
+  const rl = $('<label class="lbl">Tasa del dólar (Bs.)</label>');
+  c2.appendChild(rl);
+  const rrow = $('<div style="display:flex;gap:8px;margin-bottom:8px"></div>');
+  ['auto','manual'].forEach(m => {
+    const on = b.rateMode===m;
+    const btn = $('<button class="btn btn-sm '+(on?'btn-solid':'btn-ghost')+'" style="flex:1;justify-content:center">'+(m==='auto'?'Automática (BCV)':'Manual')+'</button>');
+    btn.onclick = () => { b.rateMode=m; render(); };
+    rrow.appendChild(btn);
+  });
+  c2.appendChild(rrow);
+  if (b.rateMode==='manual') {
+    const mi = $('<input class="ip" value="'+b.rate+'" inputmode="decimal" />');
+    mi.oninput = () => { b.rate=parseFloat(mi.value)||0; touch(); };
+    c2.appendChild(mi);
+    c2.appendChild($('<div style="font-size:12px;color:var(--ink-300);margin-top:5px">Tú defines la tasa. Cámbiala cuando suba.</div>'));
+  } else {
+    c2.appendChild($('<div style="font-size:12.5px;color:var(--ink-500);background:var(--standard-grey);border-radius:var(--radius-md);padding:11px 13px;line-height:1.5">Se toma sola del BCV cada vez que un cliente abre el menú. Si no hay internet, usa la última tasa guardada (<b>Bs. '+b.rate+'</b>).</div>'));
+  }
+  c.appendChild(c2);
+
+  // Pago movil data
+  const c3 = $('<div class="card"></div>');
+  c3.appendChild($('<h2 style="font-weight:900;font-size:15px;text-transform:uppercase;margin:0 0 14px">Datos de Pago Móvil</h2>'));
+  const pm = draft.payment.pagomovil;
+  c3.appendChild(field('Banco', pm.banco, v=>pm.banco=v, {ph:'0105 Mercantil'}));
+  c3.appendChild(field('Cédula / RIF', pm.cedula, v=>pm.cedula=v));
+  c3.appendChild(field('Teléfono', pm.telefono, v=>pm.telefono=v, {inputmode:'tel'}));
+  c.appendChild(c3);
+}
+
+/* ---------------- USUARIOS TAB ---------------- */
+function renderUsuarios(c) {
+  c.innerHTML = '';
+  c.appendChild($('<p style="color:var(--ink-500);font-size:13px;margin:2px 2px 16px;line-height:1.5">Quién puede entrar a cada panel. El <b>gerente</b> entra aquí (Backend). El <b>operador</b> entra al panel de cocina.</p>'));
+  [['gerente','Gerente · Backend'],['operador','Operador · Cocina']].forEach(([k,title]) => {
+    const u = draft.users[k];
+    const card = $('<div class="card" style="margin-bottom:14px"></div>');
+    card.appendChild($('<h2 style="font-weight:900;font-size:15px;text-transform:uppercase;margin:0 0 14px">'+title+'</h2>'));
+    card.appendChild(field('Nombre', u.name, v=>u.name=v));
+    const g = $('<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>');
+    g.appendChild(field('Usuario', u.user, v=>u.user=v));
+    g.appendChild(field('Contraseña', u.pass, v=>u.pass=v));
+    card.appendChild(g);
+    c.appendChild(card);
+  });
+}
+
+/* ---------------- HISTORIAL TAB ---------------- */
+function renderHistorial(c) {
+  c.innerHTML = '';
+  if (!db.history.length) { c.appendChild($('<div class="card" style="text-align:center;color:var(--ink-300);padding:36px 18px;font-weight:700">Aún no hay cambios registrados.</div>')); return; }
+  const card = $('<div class="card" style="padding:6px 0"></div>');
+  db.history.forEach((h, i) => {
+    const d = new Date(h.ts);
+    const when = d.toLocaleDateString('es-VE',{day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'});
+    const row = $('<div style="display:flex;gap:12px;padding:13px 18px;'+(i<db.history.length-1?'border-bottom:1px solid var(--line-200)':'')+'"></div>');
+    row.innerHTML = '<span style="width:34px;height:34px;border-radius:50%;background:var(--standard-grey);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--ink-500)">'+svg('history',17)+'</span>'+
+      '<div style="flex:1"><div style="font-weight:700;font-size:14px">'+esc(h.what)+'</div><div style="font-size:12px;color:var(--ink-300);margin-top:2px">'+esc(h.who)+' · '+when+'</div></div>';
+    card.appendChild(row);
+  });
+  c.appendChild(card);
+}
+
+render();
+</script>
+</body>
+</html>

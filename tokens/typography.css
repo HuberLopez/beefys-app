@@ -1,0 +1,38 @@
+/* Beefys — Typography tokens
+   ONE typeface: Slussen Mono (monospaced). Used for everything — display, body, UI, labels.
+   BRAND RULE: never alter horizontal letter spacing / kerning. letter-spacing stays `normal`.
+   Display moments lean BLACK weight + UPPERCASE. Body is Regular/Medium, sentence case. */
+
+:root {
+  --font-mono: "Slussen Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: var(--font-mono);
+  --font-body: var(--font-mono);
+
+  /* weights available in the family */
+  --fw-light: 300;     /* @kind font */
+  --fw-regular: 400;   /* @kind font */
+  --fw-medium: 500;    /* @kind font */
+  --fw-semibold: 600;  /* @kind font */
+  --fw-bold: 700;      /* @kind font */
+  --fw-black: 900;     /* @kind font */
+
+  /* type scale (px) — punchy, large display end */
+  --fs-3xl: 88px;   /* hero display */
+  --fs-2xl: 64px;
+  --fs-xl: 44px;
+  --fs-lg: 32px;
+  --fs-md: 24px;
+  --fs-sm: 18px;
+  --fs-base: 16px;  /* body */
+  --fs-xs: 14px;
+  --fs-2xs: 12px;   /* mono labels / captions */
+
+  /* line heights — tight for display (the book sets 100%), comfy for body */
+  --lh-tight: 1;     /* @kind font */
+  --lh-snug: 1.12;   /* @kind font */
+  --lh-body: 1.5;    /* @kind font */
+
+  /* the brand rule: keep kerning untouched */
+  --tracking-normal: 0;  /* @kind font */
+  --tracking-label: 0;   /* @kind font */
+}
